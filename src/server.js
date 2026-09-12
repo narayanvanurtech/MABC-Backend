@@ -20,18 +20,50 @@ import { connectBackupDatabase, syncExistingDataToBackup } from './backup.js';
 import { hashPassword } from './utils.js';
 
 const app = express();
-const allowedOrigins = new Set([config.clientUrl, config.adminUrl]);
+const allowedOrigins = new Set([
+  config.clientUrl,
+  config.adminUrl,
+
+  'https://www.mombabycare.co.in',
+  'https://mombabycare.co.in',
+
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+]);
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.has(origin) || /^http:\/\/localhost:517\d$/.test(origin)) {
+      console.log('Incoming origin:', origin);
+
+      if (!origin || allowedOrigins.has(origin)) {
         return callback(null, true);
       }
-      return callback(new Error('Not allowed by CORS'));
+
+      console.error('CORS blocked:', origin);
+
+      return callback(
+        new Error(`Not allowed by CORS: ${origin}`)
+      );
     },
+
     credentials: true,
-  }),
+
+    methods: [
+      'GET',
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE',
+      'OPTIONS',
+    ],
+
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+    ],
+  })
 );
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
